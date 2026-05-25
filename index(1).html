@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Erik's Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222222; --border: #2e2e2e;
+    --text: #f0ede8; --muted: #888880; --dim: #555550;
+    --accent: #c8a96e; --accent2: #7eb8a4; --up: #6dab7e; --down: #c46b6b; --info: #6a9fd8;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+  .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+  .header h1 { font-size: 26px; font-weight: 300; letter-spacing: -0.02em; }
+  .header h1 span { color: var(--accent); font-weight: 500; }
+  .last-updated { font-size: 12px; color: var(--dim); font-family: 'DM Mono', monospace; }
+  .btn-refresh { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .weather-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 2rem; }
+  .weather-temp { font-size: 42px; font-weight: 300; color: var(--accent); letter-spacing: -0.03em; }
+  .weather-desc { font-size: 14px; color: var(--muted); }
+  .weather-loc { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .weather-divider { width: 1px; height: 50px; background: var(--border); }
+  .forecast { display: flex; gap: 10px; flex: 1; }
+  .fc-day { flex: 1; background: var(--surface2); border-radius: 7px; padding: 10px 8px; text-align: center; }
+  .fc-dow { font-size: 10px; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; }
+  .fc-hi { font-size: 16px; font-weight: 500; color: var(--text); }
+  .fc-lo { font-size: 12px; color: var(--dim); }
+  .fc-precip { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .fc-precip.wet { color: var(--info); }
+  .indices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .index-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .index-label { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
+  .index-value { font-size: 20px; font-weight: 500; color: var(--text); letter-spacing: -0.02em; font-family: 'DM Mono', monospace; }
+  .index-chg { font-size: 12px; margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+  .card-title { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent2); margin-bottom: 12px; }
+  .card-full { margin-bottom: 1.5rem; }
+  .portfolio-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .portfolio-row:last-child { border-bottom: none; }
+  .p-symbol { font-size: 13px; font-weight: 500; color: var(--text); font-family: 'DM Mono', monospace; }
+  .p-name { font-size: 11px; color: var(--dim); margin-top: 1px; }
+  .p-price { font-size: 13px; font-weight: 500; text-align: right; font-family: 'DM Mono', monospace; }
+  .p-pct { font-size: 11px; margin-top: 1px; text-align: right; font-family: 'DM Mono', monospace; }
+  .news-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .news-title { font-size: 13px; color: var(--text); line-height: 1.4; cursor: pointer; text-decoration: none; display: block; }
+  .news-title:hover { color: var(--accent); }
+  .news-meta { font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .loading { color: var(--dim); font-size: 12px; padding: 1rem 0; text-align: center; font-family: 'DM Mono', monospace; }
+  .error { color: var(--down); font-size: 12px; padding: 0.5rem 0; font-family: 'DM Mono', monospace; }
+  @media (max-width: 720px) {
+    .indices { grid-template-columns: repeat(2, 1fr); }
+    .grid2 { grid-template-columns: 1fr; }
+    .weather-bar { flex-wrap: wrap; gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div><h1>Good morning, <span>Erik</span></h1></div>
+    <div class="header-right">
+      <span class="last-updated" id="last-updated">—</span>
+      <button class="btn-refresh" onclick="loadAll()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="section-label">Weather — Waconia, MN</div>
+  <div class="weather-bar">
+    <div style="display:flex;align-items:baseline;gap:10px;">
+      <div class="weather-temp" id="wx-temp">—</div>
+      <div><div class="weather-desc" id="wx-desc">—</div><div class="weather-loc">Waconia, MN</div></div>
+    </div>
+    <div class="weather-divider"></div>
+    <div class="forecast" id="wx-forecast"><div class="loading">loading...</div></div>
+  </div>
+
+  <div class="section-label">Markets</div>
+  <div class="indices">
+    <div class="index-card"><div class="index-label">S&amp;P 500</div><div class="index-value" id="sp500">—</div><div class="index-chg" id="sp500-chg"></div></div>
+    <div class="index-card"><div class="index-label">Nasdaq</div><div class="index-value" id="nasdaq">—</div><div class="index-chg" id="nasdaq-chg"></div></div>
+    <div class="index-card"><div class="index-label">Dow Jones</div><div class="index-value" id="dow">—</div><div class="index-chg" id="dow-chg"></div></div>
+    <div class="index-card"><div class="index-label">10Y Treasury</div><div class="index-value" id="treasury">—</div><div class="index-chg" id="treasury-chg"></div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Portfolio</div>
+      <div id="portfolio-list"><div class="loading">loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Financial News</div>
+      <div id="fin-news"><div class="loading">loading...</div></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Timberwolves &amp; NBA</div>
+      <div id="nba-news"><div class="loading">loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Vikings</div>
+      <div id="vikings-news"><div class="loading">loading...</div></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">CFO Jobs — Twin Cities</div>
+      <div id="jobs-news"><div class="loading">loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Music &amp; Concerts</div>
+      <div id="music-news"><div class="loading">loading...</div></div>
+    </div>
+  </div>
+
+  <div class="card card-full">
+    <div class="card-title">Breaking News</div>
+    <div id="breaking-news"><div class="loading">loading...</div></div>
+  </div>
+</div>
+
+<script>
+// Weather via Open-Meteo (free, no key)
+async function loadWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=44.9636&longitude=-93.7087&current=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=America%2FChicago&forecast_days=5');
+    const d = await res.json();
+    const descs = {0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Foggy',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'};
+    document.getElementById('wx-temp').textContent = Math.round(d.current.temperature_2m) + '°F';
+    document.getElementById('wx-desc').textContent = descs[d.current.weathercode] || 'Clear';
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    document.getElementById('wx-forecast').innerHTML = d.daily.time.map((t,i) => {
+      const day = days[new Date(t+'T12:00:00').getDay()];
+      const p = d.daily.precipitation_probability_max[i];
+      return `<div class="fc-day"><div class="fc-dow">${day}</div><div class="fc-hi">${Math.round(d.daily.temperature_2m_max[i])}°</div><div class="fc-lo">${Math.round(d.daily.temperature_2m_min[i])}°</div><div class="fc-precip ${p>=50?'wet':''}">${p}%${p>=50?' 🌧':''}</div></div>`;
+    }).join('');
+  } catch(e) { document.getElementById('wx-temp').textContent = '—'; }
+}
+
+// Stocks via Yahoo Finance
+function pctClass(v) { return parseFloat(v) >= 0 ? 'up' : 'down'; }
+function pctArrow(v) { return parseFloat(v) >= 0 ? '▲' : '▼'; }
+function fmt(n,d=2) { return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+async function loadQuote(symbol, valueId, chgId) {
+  try {
+    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`, {headers:{'User-Agent':'Mozilla/5.0'}});
+    const d = await res.json();
+    const q = d.chart.result[0];
+    const price = q.meta.regularMarketPrice;
+    const prev = q.meta.chartPreviousClose;
+    const chg = (price - prev) / prev * 100;
+    document.getElementById(valueId).textContent = fmt(price);
+    const el = document.getElementById(chgId);
+    el.textContent = `${pctArrow(chg)} ${fmt(Math.abs(chg))}%`;
+    el.className = 'index-chg ' + pctClass(chg);
+  } catch { document.getElementById(valueId).textContent = '—'; }
+}
+
+function loadIndices() {
+  loadQuote('^GSPC','sp500','sp500-chg');
+  loadQuote('^IXIC','nasdaq','nasdaq-chg');
+  loadQuote('^DJI','dow','dow-chg');
+  loadQuote('^TNX','treasury','treasury-chg');
+}
+
+function loadPortfolio() {
+  const holdings = [
+    {symbol:'JEPI', name:'JPMorgan Equity Prem.'},
+    {symbol:'VXUS', name:'Vanguard Total Intl'},
+    {symbol:'FXAIX', name:'Fidelity S&P 500'},
+    {symbol:'FSPSX', name:'Fidelity Intl Index'},
+  ];
+  document.getElementById('portfolio-list').innerHTML = holdings.map(h => `
+    <div class="portfolio-row">
+      <div><div class="p-symbol">${h.symbol}</div><div class="p-name">${h.name}</div></div>
+      <div><div class="p-price" id="price-${h.symbol}">—</div><div class="p-pct" id="pct-${h.symbol}">—</div></div>
+    </div>`).join('');
+  holdings.forEach(async h => {
+    try {
+      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${h.symbol}?interval=1d&range=1d`);
+      const d = await res.json();
+      const q = d.chart.result[0];
+      const price = q.meta.regularMarketPrice;
+      const prev = q.meta.chartPreviousClose;
+      const chg = (price - prev) / prev * 100;
+      document.getElementById(`price-${h.symbol}`).textContent = '$' + fmt(price);
+      document.getElementById(`price-${h.symbol}`).className = 'p-price ' + pctClass(chg);
+      const pctEl = document.getElementById(`pct-${h.symbol}`);
+      pctEl.textContent = `${pctArrow(chg)} ${fmt(Math.abs(chg))}%`;
+      pctEl.className = 'p-pct ' + pctClass(chg);
+    } catch { document.getElementById(`price-${h.symbol}`).textContent = '—'; }
+  });
+}
+
+// RSS via rss2json.com (free, no key needed, handles CORS)
+async function loadRSS(feedUrl, containerId, max=5) {
+  const el = document.getElementById(containerId);
+  try {
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=${max}`);
+    const d = await res.json();
+    if (!d.items || !d.items.length) { el.innerHTML = '<div class="error">no items found</div>'; return; }
+    el.innerHTML = d.items.map(item => {
+      const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      return `<div class="news-item">
+        <a class="news-title" href="${item.link}" target="_blank" rel="noopener">${item.title}</a>
+        <div class="news-meta">${d.feed.title||''} · ${date}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = '<div class="error">unable to load</div>'; }
+}
+
+function loadAll() {
+  loadWeather();
+  loadIndices();
+  loadPortfolio();
+  loadRSS('https://feeds.marketwatch.com/marketwatch/topstories/', 'fin-news');
+  loadRSS('https://www.espn.com/espn/rss/nba/news', 'nba-news');
+  loadRSS('https://www.espn.com/espn/rss/nfl/news', 'vikings-news');
+  loadRSS('https://www.indeed.com/rss?q=CFO&l=Minneapolis%2C+MN&sort=date', 'jobs-news');
+  loadRSS('https://news.google.com/rss/search?q=Van+Halen+OR+%22The+Strokes%22+OR+concert+Minneapolis+MN&hl=en-US&gl=US&ceid=US:en', 'music-news');
+  loadRSS('https://feeds.reuters.com/reuters/topNews', 'breaking-news', 6);
+  document.getElementById('last-updated').textContent = 'updated ' + new Date().toLocaleTimeString();
+}
+
+loadAll();
+</script>
+</body>
+</html>
